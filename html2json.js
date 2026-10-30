@@ -15,7 +15,7 @@ const getLineNumber = (htmlText, index) => htmlText.slice(0, index).split("\n").
 const isWhitespace = (character) => whitespaceCharacters.includes(character);
 
 
-// The html2json and convertHtml2JsonAndSet was replaced to the bootom of this file
+// The html2json and convertHtml2JsonAndSet was replaced to the bottom of this file
 
 const normalizeContent = (text) =>
   whitespaceCharacters
