@@ -35,11 +35,10 @@ const htmlExample1 = `<!DOCTYPE html>
 </html>
 `;
 
-const htmlExample2 = `<div>
-<p>Hello world!</p>
-  <button>Click me!</button>
-  <textarea>Some very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long string.</textarea>
-</div>
+const htmlExample2 = `<meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML to JSON</title>
+    <script src="html2json.js"></script>
 `;
 
 const htmlExample3 = `<head>

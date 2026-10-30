@@ -3,20 +3,16 @@ const doctypeTag = "!doctype";
 const doctypePrefix = "<!doctype";
 const commentStart = "<!--";
 const commentEnd = "-->";
+
+const voidElements = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",];
 const rawTextElements = ["script", "style", "textarea"];
 const whitespaceCharacters = [" ", "\n", "\t", "\r", "\f"];
-const unquotedValueTerminators = [...whitespaceCharacters, ">"];
 const nameTerminators = [...whitespaceCharacters, "=", ">", "/"];
-const voidElements = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"];
+const unquotedValueTerminators = [...whitespaceCharacters, ">"];
 
+const isLetter = (character) => (character >= "a" && character <= "z") || (character >= "A" && character <= "Z");
+const getLineNumber = (htmlText, index) => htmlText.slice(0, index).split("\n").length;
 const isWhitespace = (character) => whitespaceCharacters.includes(character);
-
-const isLetter = (character) =>
-  (character >= "a" && character <= "z") ||
-  (character >= "A" && character <= "Z");
-
-const getLineNumber = (htmlText, index) =>
-  htmlText.slice(0, index).split("\n").length;
 
 const normalizeContent = (text) =>
   whitespaceCharacters
@@ -25,9 +21,10 @@ const normalizeContent = (text) =>
     .filter((word) => word !== "")
     .join(" ");
 
-const skipWhitespace = (htmlText, position) => isWhitespace(htmlText[position])
-  ? skipWhitespace(htmlText, position + 1)
-  : position;
+const skipWhitespace = (htmlText, position) =>
+  isWhitespace(htmlText[position])
+    ? skipWhitespace(htmlText, position + 1)
+    : position;
 
 const findNameEnd = (htmlText, position) => {
   const character = htmlText[position];
@@ -45,7 +42,9 @@ const findUnquotedValueEnd = (htmlText, position) => {
 
 const findRawTextClosingStart = (htmlText, position, tag) => {
   const candidateStart = htmlText.indexOf("</", position);
-  const candidateTag = htmlText.slice(candidateStart + 2, candidateStart + 2 + tag.length).toLowerCase();
+  const candidateTag = htmlText
+    .slice(candidateStart + 2, candidateStart + 2 + tag.length)
+    .toLowerCase();
   const isNotFound = candidateStart === -1;
   const isClosingTag = candidateTag === tag;
 
@@ -55,12 +54,12 @@ const findRawTextClosingStart = (htmlText, position, tag) => {
 };
 
 const createNode = (line, tag, entries, content, children) => {
-  const classEntry = entries.find(([name]) => name === "class");
-  const classNames = classEntry === undefined ? "" : classEntry[1];
-  const classes = normalizeContent(classNames).split(" ").filter((className) => className !== "");
-  const attributes = entries.filter(([name]) => name !== "class").reduce((result, [name, value]) => ({ ...result, [name]: value }), {});
+  const attributes = entries.reduce(
+    (result, [name, value]) => ({ ...result, [name]: value }),
+    {}
+  );
 
-  return { line, tag, classes, attributes, content, children };
+  return { line, tag, attributes, content, children };
 };
 
 const parseAttributeValue = (htmlText, position) => {
@@ -83,6 +82,9 @@ const parseAttributeValue = (htmlText, position) => {
     : undefined;
 };
 
+
+//Element Parsing Functions
+
 const parseAttributes = (htmlText, position, entries) => {
   const nameStart = skipWhitespace(htmlText, position);
   const character = htmlText[nameStart];
@@ -99,7 +101,9 @@ const parseAttributes = (htmlText, position, entries) => {
   const equalsIndex = skipWhitespace(htmlText, nameEnd);
   const hasValue = htmlText[equalsIndex] === "=";
   const valueStart = skipWhitespace(htmlText, equalsIndex + 1);
-  const parsedValue = hasValue ? parseAttributeValue(htmlText, valueStart) : { value: "", position: nameEnd };
+  const parsedValue = hasValue
+    ? parseAttributeValue(htmlText, valueStart)
+    : { value: "", position: nameEnd };
   const isDuplicate = entries.some(([entryName]) => entryName === name);
 
   if (parsedValue === undefined) return undefined;
@@ -131,7 +135,9 @@ const parseElement = (htmlText, tagStart) => {
   if (isRawTextElement) {
     const closingStart = findRawTextClosingStart(htmlText, contentStart, tag);
     const closingEnd = closingStart === -1 ? -1 : htmlText.indexOf(">", closingStart);
-    const closingRest = htmlText.slice(closingStart + 2 + tag.length, closingEnd).trim();
+    const closingRest = htmlText
+      .slice(closingStart + 2 + tag.length, closingEnd)
+      .trim();
     const isClosingValid = closingEnd !== -1 && closingRest === "";
 
     return isClosingValid
@@ -182,9 +188,7 @@ const parseChildren = (htmlText, position, parentTag, children, contentParts) =>
   }
 
   const isComment = htmlText.startsWith(commentStart, tagStart);
-  const isDoctype =
-    htmlText.slice(tagStart, tagStart + doctypePrefix.length).toLowerCase() ===
-    doctypePrefix;
+  const isDoctype = htmlText.slice(tagStart, tagStart + doctypePrefix.length).toLowerCase() === doctypePrefix;
   const isClosingTag = htmlText.startsWith("</", tagStart);
   const isOpeningTag = isLetter(htmlText[tagStart + 1]);
 
@@ -204,11 +208,17 @@ const parseChildren = (htmlText, position, parentTag, children, contentParts) =>
 
   if (isDoctype) {
     const doctypeEnd = htmlText.indexOf(">", tagStart);
+    const doctypeEntries = normalizeContent(
+      htmlText.slice(tagStart + doctypePrefix.length, doctypeEnd)
+    )
+      .split(" ")
+      .filter((word) => word !== "")
+      .map((word) => [word, ""]);
     const doctypeNode = createNode(
       getLineNumber(htmlText, tagStart),
       doctypeTag,
-      [],
-      htmlText.slice(tagStart + doctypePrefix.length, doctypeEnd).trim(),
+      doctypeEntries,
+      "",
       []
     );
 
@@ -256,6 +266,9 @@ const parseChildren = (htmlText, position, parentTag, children, contentParts) =>
 
   return undefined;
 };
+
+
+// Inputs to the functions are located in ./html_samples/samples.js as queries to the DOM
 
 const html2json = (htmlText) => {
   const parsedRoot = parseChildren(htmlText, 0, rootTag, [], []);
