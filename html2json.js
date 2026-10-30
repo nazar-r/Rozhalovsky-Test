@@ -280,12 +280,18 @@ const html2json = (htmlText) => {
 };
 
 const convertHtml2JsonAndSet = () => {
-  const htmlTextAreaValue = document.querySelector("#html").value;
-  const jsonObj = html2json(htmlTextAreaValue);
-  const isValidMarkup = jsonObj !== undefined;
+  const htmlTextAreaValue = document.querySelector("#html");
   const jsonArea = document.querySelector("#json");
 
-  if (!isValidMarkup) return;
+  if (htmlTextAreaValue.value.length === 0) {
+    jsonArea.textContent = "Please provide an input";
+    return;
+  }
+
+  const jsonObj = html2json(htmlTextAreaValue.value);
+  const isValidMarkup = jsonObj !== undefined;
+
+  if (!isValidMarkup) return
 
   jsonArea.textContent = JSON.stringify(jsonObj, null, 2);
 };

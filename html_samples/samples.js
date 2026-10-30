@@ -113,11 +113,7 @@ const htmlExample3 = `<head>
 
 const setExample = (htmlExample) => {
     document.querySelector("#html").value = htmlExample;
-    document.querySelector("#json").textContent = JSON.stringify(
-        exampleJsonContent,
-        null,
-        2
-    );
+    document.querySelector("#json").textContent = JSON.stringify();
 };
 
 const showExample1 = () => setExample(htmlExample1);
