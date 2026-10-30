@@ -14,6 +14,9 @@ const isLetter = (character) => (character >= "a" && character <= "z") || (chara
 const getLineNumber = (htmlText, index) => htmlText.slice(0, index).split("\n").length;
 const isWhitespace = (character) => whitespaceCharacters.includes(character);
 
+
+// The html2json and convertHtml2JsonAndSet was replaced to the bootom of this file
+
 const normalizeContent = (text) =>
   whitespaceCharacters
     .reduce((spacedText, character) => spacedText.split(character).join(" "), text)
@@ -62,6 +65,9 @@ const createNode = (line, tag, entries, content, children) => {
   return { line, tag, attributes, content, children };
 };
 
+
+//Element Parsing Functions
+
 const parseAttributeValue = (htmlText, position) => {
   const quote = htmlText[position];
   const isQuoted = quote === '"' || quote === "'";
@@ -81,9 +87,6 @@ const parseAttributeValue = (htmlText, position) => {
     ? { value: htmlText.slice(position, unquotedEnd), position: unquotedEnd }
     : undefined;
 };
-
-
-//Element Parsing Functions
 
 const parseAttributes = (htmlText, position, entries) => {
   const nameStart = skipWhitespace(htmlText, position);
